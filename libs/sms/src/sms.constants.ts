@@ -1,0 +1,1 @@
+export const SMS_MODULE_OPTIONS = Symbol('SMS_MODULE_OPTIONS');

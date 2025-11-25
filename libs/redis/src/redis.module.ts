@@ -33,9 +33,10 @@ export class RedisModule implements OnModuleDestroy {
     };
   }
 
-  static forRootAsync(options: RedisModuleAsyncOptions): DynamicModule {
+  static forRootAsync(options: RedisModuleAsyncOptions, isGlobal = false): DynamicModule {
     const clientProvider = this.createAysncProvider();
     return {
+      global: isGlobal,
       module: RedisModule,
       imports: options.imports ?? [],
       providers: [

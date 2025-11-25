@@ -1,6 +1,6 @@
 import { SetupStrategy } from './setup.interface';
 import { LoggerService } from '../logger';
-
+import { CommonUtil } from '../utils';
 export class StartedStrategy extends SetupStrategy {
   async execute (): Promise<void> {
     // 服务启动相关程序
@@ -19,12 +19,11 @@ export class StartedStrategy extends SetupStrategy {
       await this.app.listen(port);
 
       let startOutput = `\n- 服务 ${appName
-        } 已经正常启动! \n- 服务访问地址: http://${process.env.CS_HOST}:${Number(
+        } 已经正常启动! \n- 服务访问地址: http://${CommonUtil.getIPAdress()}:${Number(
           process.env.CS_PORT,
         )}/${process.env.CS_SERVERPATH} \n`;
       if (this.configService.get('docs')) {
-        startOutput += `- 服务的RESTfulAPI文档地址: http://${process.env.CS_HOST
-          }:${Number(process.env.CS_PORT)}/${docsPath} \n`;
+        startOutput += `- 服务的RESTfulAPI文档地址: http://${CommonUtil.getIPAdress()}:${Number(process.env.CS_PORT)}/${docsPath} \n`;
       }
       logger.log(startOutput);
     } else {

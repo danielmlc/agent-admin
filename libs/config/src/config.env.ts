@@ -1,18 +1,5 @@
 import { EnvConfig } from './config.interface';
 
-/**
- * 获取默认 host（延迟执行以避免循环依赖）
- */
-const getDefaultHost = (): string => {
-  try {
-    // 动态导入以避免循环依赖
-    const { CommonUtil } = require('@app/common');
-    return CommonUtil.getIPAdress();
-  } catch (error) {
-    console.warn('无法获取 IP 地址，使用 localhost', error?.message);
-    return 'localhost';
-  }
-};
 
 /**
  * 默认环境变量配置
@@ -49,12 +36,6 @@ export const read2Env = (config: any): void => {
       } else {
         // 简单类型，直接设置环境变量
         let value = config[key] || defaultEnvConfig[key];
-
-        // 特殊处理 host：如果配置中没有设置，则动态获取 IP 地址
-        if (key === 'host' && !config[key]) {
-          value = getDefaultHost();
-        }
-
         process.env[`CS_${key.toUpperCase()}`] = String(value);
       }
     }

@@ -12,22 +12,8 @@ export class AppController {
 
   @Get()
   getHello (): string {
+    this.logger.verbose('hello agent!!');
     return this.appService.getHello();
   }
 
-  @Get('info')
-  getAppInfo () {
-    this.logger.debug('sadsadsadsadsa', this.config.getAll());
-    return this.appService.getAppInfo();
-  }
-
-  @Get('config/database')
-  getDatabaseConfig () {
-    return this.appService.getDatabaseConfig();
-  }
-
-  @Get('config/all')
-  getAllConfig () {
-    return this.appService.getAllConfig();
-  }
 }

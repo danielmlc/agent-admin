@@ -48,9 +48,9 @@ export class LoggerService implements NestLoggerService {
     @Optional() protected context?: string,
     @Optional()
     @Inject(LOGGER_MODULE_OPTIONS)
-    protected options: LoggerModuleOptions = {},
+    protected options?: LoggerModuleOptions,
   ) {
-    this.options = defaultsDeep(this.options, DEFAULT_LOG_CONFIG);
+    this.options = defaultsDeep(this.options || {}, DEFAULT_LOG_CONFIG);
     this.initWinston();
   }
 

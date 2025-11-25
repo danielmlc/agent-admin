@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@app/config';
 import { LoggerModule } from '@app/common';
 import { ContextModule } from '@app/common';
 import { HttpModule } from '@app/common';
+import { RedisModule } from '@libs/redis';
 
 /**
  * 共享模块 - 全局共享的库模块
@@ -21,7 +22,6 @@ import { HttpModule } from '@app/common';
     LoggerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => {
-        console.log(11111, config.getAll());
         return {
           ...config.get('logger'),
         };
@@ -42,7 +42,18 @@ import { HttpModule } from '@app/common';
       },
       inject: [ConfigService],
     }),
+
+    // Redis 模块 - 异步加载，依赖配置，全局可用
+    RedisModule.forRootAsync({
+      useFactory: async (config: ConfigService) => {
+        return config.get('redis', {
+          host: 'localhost',
+          port: 6379,
+        });
+      },
+      inject: [ConfigService],
+    }, true),
   ],
-  exports: [ConfigModule, LoggerModule, ContextModule, HttpModule],
+  exports: [ConfigModule, LoggerModule, ContextModule, HttpModule, RedisModule],
 })
 export class ShareModule { }

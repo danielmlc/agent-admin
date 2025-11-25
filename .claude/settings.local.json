@@ -1,13 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)",
-      "Bash(npm run build:*)",
-      "Bash(npx nest build:*)",
-      "Bash(node test-config.js:*)",
-      "Bash(npm run start:dev:*)",
-      "Bash(curl:*)",
-      "Bash(npm install:*)"
+      "Bash(powershell -Command \"Get-Process | Where-Object { $_ProcessName -eq ''node'' } | Select-Object Id, ProcessName | Format-Table -AutoSize\")",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

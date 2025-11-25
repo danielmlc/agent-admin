@@ -29,6 +29,30 @@
       ],
       "@app/common/*": [
         "libs/common/src/*"
+      ],
+      "@libs/redis": [
+        "libs/redis/src"
+      ],
+      "@libs/redis/*": [
+        "libs/redis/src/*"
+      ],
+      "@libs/sms": [
+        "libs/sms/src"
+      ],
+      "@libs/sms/*": [
+        "libs/sms/src/*"
+      ],
+      "@libs/captcha": [
+        "libs/captcha/src"
+      ],
+      "@libs/captcha/*": [
+        "libs/captcha/src/*"
+      ],
+      "@libs/common": [
+        "libs/common/src"
+      ],
+      "@libs/common/*": [
+        "libs/common/src/*"
       ]
     }
   }
