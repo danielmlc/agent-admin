@@ -8,9 +8,9 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { ConfigService } from '@app/config';
-import { RedisService } from '@libs/redis';
-import { CaptchaService } from '@libs/captcha';
-import { SmsService } from '@libs/sms';
+import { RedisService } from '@app/redis';
+import { CaptchaService } from '@app/captcha';
+import { SmsService } from '@app/sms';
 import { UserService } from '../user/user.service';
 import {
   User,

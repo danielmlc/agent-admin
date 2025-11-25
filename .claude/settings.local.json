@@ -4,7 +4,16 @@
       "Bash(powershell -Command \"Get-Process | Where-Object { $_ProcessName -eq ''node'' } | Select-Object Id, ProcessName | Format-Table -AutoSize\")",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(pnpm install:*)",
+      "Bash(npm run start:dev:*)",
+      "Bash(timeout /t 10)",
+      "Bash(pnpm rebuild:*)",
+      "Bash(powershell -Command \"Remove-Item -Recurse -Force node_modules\")",
+      "Bash(npm install)",
+      "Bash(tree:*)",
+      "Bash(dir:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

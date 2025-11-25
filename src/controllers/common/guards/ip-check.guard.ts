@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IpRule, RuleType } from '../../modules/user/entities/ip-rule.entity';
-import { RedisService } from '@libs/redis';
+import { RedisService } from '@app/redis';
 
 @Injectable()
 export class IpCheckGuard implements CanActivate {

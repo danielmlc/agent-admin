@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { User, UserStatus } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Argon2Utils } from '@libs/common/utils/crypto.util';
+import { Argon2Utils } from '@app/common/utils/crypto.util';
 
 @Injectable()
 export class UserService {

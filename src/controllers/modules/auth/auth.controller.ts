@@ -8,7 +8,7 @@ import {
   Ip,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CaptchaService } from '@libs/captcha';
+import { CaptchaService } from '@app/captcha';
 import { LoginUsernameDto } from './dto/login-username.dto';
 import { LoginSmsDto } from './dto/login-sms.dto';
 import { SendSmsCodeDto } from './dto/send-sms-code.dto';

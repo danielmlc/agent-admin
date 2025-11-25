@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as svgCaptcha from 'svg-captcha';
 import { nanoid } from 'nanoid';
-import { RedisService } from '@libs/redis';
+import { RedisService } from '@app/redis';
 import { CaptchaResult, CaptchaOptions } from './captcha.interface';
 
 @Injectable()

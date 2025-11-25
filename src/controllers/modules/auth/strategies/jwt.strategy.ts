@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@app/config';
 import { UserService } from '../../user/user.service';
-import { RedisService } from '@libs/redis';
+import { RedisService } from '@app/redis';
 
 export interface JwtPayload {
   sub: string;

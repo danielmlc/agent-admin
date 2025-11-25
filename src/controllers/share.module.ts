@@ -3,8 +3,9 @@ import { ConfigModule, ConfigService } from '@app/config';
 import { LoggerModule } from '@app/common';
 import { ContextModule } from '@app/common';
 import { HttpModule } from '@app/common';
-import { RedisModule } from '@libs/redis';
-
+import { RedisModule } from '@app/redis';
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
 /**
  * 共享模块 - 全局共享的库模块
  * 所有从 libs 引入的模块都在这里统一管理
@@ -53,6 +54,21 @@ import { RedisModule } from '@libs/redis';
       },
       inject: [ConfigService],
     }, true),
+    ServeStaticModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => {
+        return [
+          {
+            rootPath: join(__dirname, "../..", "dist/"),
+            serveRoot: `/`,
+            exclude: [], // 定义要排除的路径模式，这些路径不会被作为静态文件处理
+            serveStaticOptions: {
+              fallthrough: false, // 表示如果找不到请求的静态文件，继续传递请求给下一个中间件或路由处理器
+            },
+          },
+        ];
+      },
+    }),
   ],
   exports: [ConfigModule, LoggerModule, ContextModule, HttpModule, RedisModule],
 })
