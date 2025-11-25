@@ -1,0 +1,82 @@
+# 配置文件示例
+# 使用说明：将此文件复制为 config.yaml 并根据实际情况修改配置
+
+application:
+  # 应用名称
+  name: 'agent-admin'
+
+  # 应用端口
+  port: 3000
+
+  # 服务路径（可选）
+  serverPath: ''
+
+  # 当前环境
+  env: 'dev'
+
+  # 激活的配置文件，多个用逗号分隔，优先级从左到右递增
+  # 例如：'dev,local' 表示先加载 profiles.dev，再加载 profiles.local
+  # profiles.local 的配置会覆盖 profiles.dev 的同名配置
+  profiles.active: 'dev,local'
+
+  # 数据库配置示例
+  database:
+    host: 'localhost'
+    port: 3306
+    username: 'root'
+    password: 'password'
+    database: 'agent_admin'
+
+  # Redis 配置示例
+  redis:
+    host: 'localhost'
+    port: 6379
+    db: 0
+
+# 开发环境配置
+profiles.dev:
+  database:
+    host: 'dev-db.example.com'
+    port: 3306
+    username: 'dev_user'
+    password: 'dev_password'
+    database: 'dev_agent_admin'
+
+  redis:
+    host: 'dev-redis.example.com'
+    port: 6379
+
+  # 日志级别
+  log:
+    level: 'debug'
+
+# 本地环境配置（会覆盖 dev 环境的配置）
+profiles.local:
+  database:
+    host: 'localhost'
+    port: 3306
+    username: 'root'
+    password: 'local_password'
+
+  redis:
+    host: 'localhost'
+    port: 6379
+
+  log:
+    level: 'debug'
+
+# 生产环境配置
+profiles.prod:
+  database:
+    host: 'prod-db.example.com'
+    port: 3306
+    username: 'prod_user'
+    password: 'prod_password'
+    database: 'prod_agent_admin'
+
+  redis:
+    host: 'prod-redis.example.com'
+    port: 6379
+
+  log:
+    level: 'error'

@@ -1,0 +1,89 @@
+# agent-admin 应用配置文件
+
+application:
+  # 应用基础配置
+  name: 'agent-admin'
+  port: 3001
+  env: 'dev'
+  serverPath: 'api'
+  
+  # 激活的配置文件（支持多个，逗号分隔，优先级从左到右递增）
+  profiles.active: 'local'
+
+  # 日志配置
+  log:
+    level: 'info'
+    dir: './logs'
+    appLogName: 'app-%DATE%.log'
+    errorLogName: 'error-%DATE%.log'
+    maxFiles: '14d'
+
+  # 文档配置
+  docs:
+    name: 'agent-admin API'
+    describe: '但以理控制面板文档'
+    version: '1.0'
+
+  # 数据库配置
+  database:
+    host: 'localhost'
+    port: 3306
+    username: 'root'
+    password: 'password'
+    database: 'agent_admin'
+
+  # ===== Bootstrap 配置策略 =====
+  
+  # 日志策略
+  logger: true
+  disableConsole: false
+
+  # 中间件策略
+  middlewareStrategy: true
+  cors:
+    origin: true
+    credentials: true
+  contextMiddleware: true
+
+  # 拦截器策略
+  interceptorsStrategy: true
+  loggerInterceptor:
+    moreInfo: false
+  transformInterceptor: true
+
+  # 管道策略
+  pipesStrategy: true
+  validationPipe:
+    transform: true
+    whitelist: true
+    forbidNonWhitelisted: false
+
+  # 过滤器策略
+  filterStrategy: true
+  exceptionFilter:
+    stack:
+      response: true
+      logger: true
+
+  # 启动策略
+  started: true
+
+# ===== Profile 配置（本地开发环境） =====
+profiles.local:
+  logger:
+    level: 'debug'
+  log:
+    level: 'debug'
+  exceptionFilter:
+    stack:
+      response: true
+      logger: true
+
+# ===== Profile 配置（开发环境） =====
+profiles.dev:
+  log:
+    level: 'info'
+  exceptionFilter:
+    stack:
+      response: false
+      logger: true
