@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CaptchaService } from '@app/captcha';
+import { ConfigService } from '@app/config';
 import { LoginUsernameDto } from './dto/login-username.dto';
 import { LoginSmsDto } from './dto/login-sms.dto';
 import { SendSmsCodeDto } from './dto/send-sms-code.dto';
@@ -29,6 +30,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly captchaService: CaptchaService,
+    private readonly configService: ConfigService,
   ) { }
 
   @Public()
@@ -117,6 +119,9 @@ export class AuthController {
   ) {
     const oauthData = req.user; // 来自 GithubStrategy.validate
 
+    // 从配置文件读取前端回调地址
+    const oauthConfig = this.configService.get('oauth.github');
+
     try {
       // 调用 authService.loginByOAuth 处理登录
       const result = await this.authService.loginByOAuth(
@@ -129,12 +134,12 @@ export class AuthController {
       );
 
       // 重定向回前端，并携带 token
-      const redirectUrl = `http://localhost:3001/login.html#/oauth-callback?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
+      const redirectUrl = `${oauthConfig.frontendCallbackUrl}?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`;
       res.redirect(redirectUrl);
     } catch (error: any) {
       // 登录失败，重定向回登录页并携带错误信息
       const errorMsg = encodeURIComponent(error.message || 'OAuth 登录失败');
-      const redirectUrl = `http://localhost:3001/login.html/#/?error=${errorMsg}`;
+      const redirectUrl = `${oauthConfig.frontendLoginUrl}/#/?error=${errorMsg}`;
       res.redirect(redirectUrl);
     }
   }

@@ -312,9 +312,12 @@ export class AuthService {
       await this.oauthBindingRepository.save(binding);
     } else {
       // 未绑定，检查 email 是否匹配已有用户
-      const email = profile.email;
+      // 从 emails 数组中提取 email,如果不存在则尝试直接读取 email 字段
+      const email = profile.emails?.[0]?.value || profile.email;
+
       if (email) {
         const existingUser = await this.userService.findByEmail(email);
+
         if (existingUser) {
           // Email 匹配，自动绑定到现有用户
           user = existingUser;

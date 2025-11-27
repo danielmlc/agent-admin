@@ -47,15 +47,15 @@ onMounted(() => {
 
   if (accessToken && refreshToken) {
     // 保存 token 到 localStorage
-    localStorage.setItem('accessToken', accessToken)
-    localStorage.setItem('refreshToken', refreshToken)
+    localStorage.setItem('access_token', accessToken)
+    localStorage.setItem('refresh_token', refreshToken)
 
     ElMessage.success('登录成功！')
 
     // 延迟跳转到首页
     setTimeout(() => {
-      // 跳转到 home 页面（根据实际路由调整）
-      window.location.href = '/#/home'
+      // 跳转到 home 页面
+      window.location.href = '/home.html'
     }, 500)
   } else {
     error.value = '未能获取到登录凭证，请重新登录'
@@ -63,7 +63,7 @@ onMounted(() => {
 })
 
 const backToLogin = () => {
-  window.location.href = '/#/'
+  window.location.href = '/login.html'
 }
 </script>
 
