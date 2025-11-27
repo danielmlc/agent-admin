@@ -30,7 +30,7 @@
               </div>
             </el-form-item>
 
-            <el-form-item prop="captchaCode" class="captcha-item">
+            <el-form-item v-if="showCaptcha" prop="captchaCode" class="captcha-item">
               <div class="captcha-input-wrapper">
                 <el-input
                   v-model="passwordForm.captchaCode"
@@ -40,7 +40,7 @@
                 />
                 <div class="captcha-image" @click="refreshCaptcha" v-loading="captchaLoading">
                   <div v-if="captchaImage" v-html="captchaImage"></div>
-                  <span v-else>点击获取</span>
+                  <span v-else class="captcha-placeholder">点击获取</span>
                 </div>
               </div>
             </el-form-item>
@@ -119,12 +119,12 @@
       <el-dialog
         v-model="showCaptchaDialog"
         title="发送短信验证码"
-        width="400px"
+        width="350px"
         :close-on-click-modal="false"
       >
         <div class="captcha-dialog-content">
           <p class="captcha-tip">请输入图形验证码</p>
-          <div class="captcha-input-wrapper">
+          <div class="captcha-input-wrapper" style="padding-left: 10px;">
             <el-input
               v-model="dialogCaptchaCode"
               placeholder="请输入验证码"
@@ -134,7 +134,6 @@
             />
             <div class="captcha-image" @click="refreshCaptcha" v-loading="captchaLoading">
               <div v-if="captchaImage" v-html="captchaImage"></div>
-              <span v-else>点击获取</span>
             </div>
           </div>
         </div>
@@ -165,7 +164,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { User, Lock, Iphone, QrCode, ChatDotRound } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -184,6 +183,8 @@ const loginLoading = ref(false)
 const captchaImage = ref('')
 const captchaId = ref('')
 const captchaLoading = ref(false)
+const showCaptcha = ref(false) // 是否显示验证码输入框
+const loginFailCount = ref(0) // 登录失败次数
 
 // 验证码弹窗
 const showCaptchaDialog = ref(false)
@@ -240,8 +241,8 @@ const getCaptcha = async () => {
   try {
     captchaLoading.value = true
     const res = await authApi.getCaptcha()
-    captchaImage.value = res.data.image
-    captchaId.value = res.data.id
+    captchaImage.value = res.data.result.image
+    captchaId.value = res.data.result.id
   } catch (error: any) {
     ElMessage.error(error.message || '获取验证码失败')
   } finally {
@@ -253,6 +254,32 @@ const getCaptcha = async () => {
 const refreshCaptcha = () => {
   getCaptcha()
 }
+
+// 检查登录失败次数
+const checkLoginFailCount = async (username: string) => {
+  if (!username) {
+    showCaptcha.value = false
+    return
+  }
+
+  try {
+    const res = await authApi.getLoginFailCount(username)
+    loginFailCount.value = res.data.result.count
+    showCaptcha.value = res.data.result.requireCaptcha
+
+    // 如果需要验证码，自动获取
+    if (showCaptcha.value && !captchaImage.value) {
+      await getCaptcha()
+    }
+  } catch (error: any) {
+    console.error('检查登录失败次数失败:', error)
+  }
+}
+
+// 监听用户名变化
+watch(() => passwordForm.username, (newUsername) => {
+  checkLoginFailCount(newUsername)
+})
 
 // 发送短信验证码
 const handleSendSms = async () => {
@@ -271,15 +298,15 @@ const handleSendSms = async () => {
     await getCaptcha()
   }
 
-  // 弹窗让用户输入图形验证码
-  const captchaCode = await ElMessageBox.prompt('请输入图形验证码', '发送短信验证码', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    inputPattern: /.+/,
-    inputErrorMessage: '请输入验证码'
-  }).then(({ value }) => value).catch(() => null)
+  // 打开验证码弹窗
+  dialogCaptchaCode.value = ''
+  showCaptchaDialog.value = true
+}
 
-  if (!captchaCode) {
+// 确认发送短信
+const confirmSendSms = async () => {
+  if (!dialogCaptchaCode.value) {
+    ElMessage.warning('请输入验证码')
     return
   }
 
@@ -287,10 +314,11 @@ const handleSendSms = async () => {
     await authApi.sendSmsCode({
       phone: smsForm.phone,
       captchaId: captchaId.value,
-      captchaCode: captchaCode
+      captchaCode: dialogCaptchaCode.value
     })
 
     ElMessage.success('验证码发送成功')
+    showCaptchaDialog.value = false
 
     // 开始倒计时
     smsCountdown.value = 60
@@ -320,16 +348,23 @@ const handlePasswordLogin = async () => {
 
     try {
       loginLoading.value = true
-      const res = await authApi.loginByUsername({
+      // 构建登录请求参数
+      const loginData: any = {
         username: passwordForm.username,
-        password: passwordForm.password,
-        captchaId: captchaId.value,
-        captchaCode: passwordForm.captchaCode
-      })
+        password: passwordForm.password
+      }
 
+      // 只在需要验证码时才传递验证码参数
+      if (showCaptcha.value) {
+        loginData.captchaId = captchaId.value
+        loginData.captchaCode = passwordForm.captchaCode
+      }
+
+      const res = await authApi.loginByUsername(loginData)
+      console.log('login', res)
       // 保存 token
-      localStorage.setItem('access_token', res.data.accessToken)
-      localStorage.setItem('refresh_token', res.data.refreshToken)
+      localStorage.setItem('access_token', res.data.result.accessToken)
+      localStorage.setItem('refresh_token', res.data.result.refreshToken)
 
       if (rememberMe.value) {
         localStorage.setItem('remember_username', passwordForm.username)
@@ -341,13 +376,19 @@ const handlePasswordLogin = async () => {
 
       // 跳转到首页
       setTimeout(() => {
-        window.location.href = '/'
+        window.location.href = '/home.html'
       }, 500)
     } catch (error: any) {
       ElMessage.error(error.response?.data?.message || '登录失败')
-      // 刷新验证码
-      await getCaptcha()
-      passwordForm.captchaCode = ''
+
+      // 登录失败后重新检查失败次数
+      await checkLoginFailCount(passwordForm.username)
+
+      // 如果显示验证码，刷新验证码并清空输入
+      if (showCaptcha.value) {
+        await getCaptcha()
+        passwordForm.captchaCode = ''
+      }
     } finally {
       loginLoading.value = false
     }
@@ -369,20 +410,20 @@ const handleSmsLogin = async () => {
       })
 
       // 保存 token
-      localStorage.setItem('access_token', res.data.accessToken)
-      localStorage.setItem('refresh_token', res.data.refreshToken)
+      localStorage.setItem('access_token', res.data.result.accessToken)
+      localStorage.setItem('refresh_token', res.data.result.refreshToken)
 
       ElMessage.success('登录成功')
 
       // 跳转到首页
       setTimeout(() => {
-        window.location.href = '/'
+        window.location.href = '/home.html'
       }, 500)
     } catch (error: any) {
       ElMessage.error(error.response?.data?.message || '登录失败')
       smsForm.smsCode = ''
     } finally {
-      loginLoading.value = false
+      loginLoading.value = false 
     }
   })
 }
@@ -399,7 +440,8 @@ const handleWechatLogin = () => {
 
 // GitHub 登录
 const handleGithubLogin = () => {
-  ElMessage.info('GitHub 登录功能开发中...')
+  // 跳转到后端 GitHub OAuth 授权端点
+  window.location.href = 'http://localhost:3001/api/auth/oauth/github'
 }
 
 // 组件挂载时获取验证码
@@ -477,13 +519,13 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 10px;
   align-items: center;
+  padding-ri: 5%;
+  padding-left: 0px;
 }
 
 .captcha-image {
-  width: 120px;
+  width: 100px;
   height: 40px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -491,9 +533,12 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: #909399;
   background: #f5f7fa;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
 
-  &:hover {
-    border-color: #409eff;
+  .captcha-placeholder {
+    font-size: 12px;
+    color: #909399;
   }
 
   :deep(svg) {
@@ -617,5 +662,15 @@ onBeforeUnmount(() => {
 
 .github-icon {
   color: #191717;
+}
+
+// 验证码弹窗样式
+.captcha-dialog-content {
+  .captcha-tip {
+    margin-bottom: 16px;
+    color: #606266;
+    font-size: 14px;
+    padding: 10px;
+  }
 }
 </style>

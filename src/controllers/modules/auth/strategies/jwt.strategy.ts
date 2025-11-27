@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly redisService: RedisService,
   ) {
     const jwtConfig = configService.get('jwt', {
-      accessTokenSecret: 'default-access-secret',
+      accessTokenSecret: 'daniel-access-secret',
     });
 
     super({
@@ -29,7 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: JwtPayload) {
+  async validate (payload: JwtPayload) {
     const { sub, jti } = payload;
 
     // 检查 Token 是否在黑名单中

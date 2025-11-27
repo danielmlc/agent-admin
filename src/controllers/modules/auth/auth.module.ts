@@ -9,6 +9,7 @@ import { SmsModule, SmsSupper } from '@app/sms';
 import { ConfigService } from '@app/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { GithubStrategy } from './strategies/github.strategy';
 
 @Module({
   imports: [
@@ -44,7 +45,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
     ),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy],
+  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, GithubStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -47,12 +47,10 @@ request.interceptors.response.use(
           refreshToken
         })
 
-        const newAccessToken = res.data.accessToken
-        const newRefreshToken = res.data.refreshToken
+        const newAccessToken = res.data.result.accessToken
 
         // 保存新的 token
         localStorage.setItem('access_token', newAccessToken)
-        localStorage.setItem('refresh_token', newRefreshToken)
 
         // 重试原请求
         config.headers.Authorization = `Bearer ${newAccessToken}`

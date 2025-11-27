@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MinLength } from 'class-validator';
+import { IsString, IsNotEmpty, MinLength, IsOptional } from 'class-validator';
 
 export class LoginUsernameDto {
   @IsString()
@@ -11,10 +11,10 @@ export class LoginUsernameDto {
   password: string;
 
   @IsString()
-  @IsNotEmpty()
-  captchaId: string;
+  @IsOptional()
+  captchaId?: string;
 
   @IsString()
-  @IsNotEmpty()
-  captchaCode: string;
+  @IsOptional()
+  captchaCode?: string;
 }

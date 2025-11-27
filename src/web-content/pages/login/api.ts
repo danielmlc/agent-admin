@@ -7,6 +7,11 @@ export const authApi = {
     return request.get('/auth/captcha')
   },
 
+  // 获取登录失败次数
+  getLoginFailCount (username: string) {
+    return request.get('/auth/login-fail-count', { params: { username } })
+  },
+
   // 发送短信验证码
   sendSmsCode (data: { phone: string; captchaId: string; captchaCode: string }) {
     return request.post('/auth/send-sms-code', data)

@@ -54,14 +54,23 @@ export class AuthService {
     ipAddress: string,
     userAgent: string,
   ) {
-    // 验证图形验证码
-    const isValidCaptcha = await this.captchaService.verify(captchaId, captchaCode);
-    if (!isValidCaptcha) {
-      throw new BadRequestException('图形验证码错误');
-    }
-
     // 检查登录失败次数
     await this.checkLoginFailLimit(username, ipAddress);
+
+    // 获取当前登录失败次数
+    const failCount = await this.getLoginFailCount(username, ipAddress);
+
+    // 失败3次或以上时，验证码必填
+    if (failCount >= 3) {
+      if (!captchaId || !captchaCode) {
+        throw new BadRequestException('请输入图形验证码');
+      }
+
+      const isValidCaptcha = await this.captchaService.verify(captchaId, captchaCode);
+      if (!isValidCaptcha) {
+        throw new BadRequestException('图形验证码错误');
+      }
+    }
 
     // 查找用户
     const user = await this.userService.findByUsername(username);
@@ -276,6 +285,105 @@ export class AuthService {
     await redis.setex(`token:blacklist:${jti}`, expireSeconds, '1');
   }
 
+  // OAuth 登录
+  async loginByOAuth (
+    provider: string,
+    providerId: string,
+    profile: any,
+    accessToken: string,
+    ipAddress: string,
+    userAgent: string,
+  ) {
+    // 1. 查找是否已有绑定
+    const binding = await this.oauthBindingRepository.findOne({
+      where: { provider, providerUserId: providerId },
+      relations: ['user'],
+    });
+
+    let user: User;
+
+    if (binding) {
+      // 已绑定，直接登录
+      user = binding.user;
+
+      // 更新 OAuth binding 的 access token 和 profile
+      binding.accessToken = accessToken;
+      binding.profile = profile;
+      await this.oauthBindingRepository.save(binding);
+    } else {
+      // 未绑定，检查 email 是否匹配已有用户
+      const email = profile.email;
+      if (email) {
+        const existingUser = await this.userService.findByEmail(email);
+        if (existingUser) {
+          // Email 匹配，自动绑定到现有用户
+          user = existingUser;
+
+          // 创建 OAuth 绑定
+          const newBinding = this.oauthBindingRepository.create({
+            userId: user.id,
+            provider,
+            providerUserId: providerId,
+            providerUsername: profile.username || profile.displayName,
+            accessToken,
+            profile,
+          });
+          await this.oauthBindingRepository.save(newBinding);
+        } else {
+          // Email 不匹配且未绑定，提示需要先注册
+          throw new UnauthorizedException(
+            '该 GitHub 账号未绑定，请先注册账号或在已有账号中绑定 GitHub',
+          );
+        }
+      } else {
+        // 没有 email，无法自动匹配，提示需要先注册
+        throw new UnauthorizedException(
+          '该 GitHub 账号未绑定，请先注册账号或在已有账号中绑定 GitHub',
+        );
+      }
+    }
+
+    // 检查用户状态
+    if (user.status !== 'normal') {
+      await this.logLogin(
+        user.id,
+        LoginType.GITHUB,
+        ipAddress,
+        userAgent,
+        LoginStatus.FAILED,
+        '用户已被禁用或锁定',
+      );
+      throw new UnauthorizedException('用户已被禁用或锁定');
+    }
+
+    // 生成 Token
+    const tokens = await this.generateTokens(user, ipAddress, userAgent);
+
+    // 更新最后登录时间
+    await this.userService.updateLastLoginAt(user.id);
+
+    // 记录登录日志
+    await this.logLogin(
+      user.id,
+      LoginType.GITHUB,
+      ipAddress,
+      userAgent,
+      LoginStatus.SUCCESS,
+    );
+
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        phone: user.phone,
+        email: user.email,
+        avatar: user.avatar,
+        nickname: user.nickname,
+      },
+      ...tokens,
+    };
+  }
+
   // 生成 Token（Access Token + Refresh Token）
   private async generateTokens (
     user: User,
@@ -381,6 +489,14 @@ export class AuthService {
     await redis.del(key);
   }
 
+  // 获取登录失败次数
+  async getLoginFailCount (identifier: string, ipAddress: string): Promise<number> {
+    const redis = this.redisService.getRedis();
+    const key = `${this.LOGIN_FAIL_PREFIX}${identifier}:${ipAddress}`;
+    const count = await redis.get(key);
+    return count ? parseInt(count) : 0;
+  }
+
   // 记录登录日志
   private async logLogin (
     userId: string | null,
@@ -424,6 +540,137 @@ export class AuthService {
         return value * 86400;
       default:
         return 7200;
+    }
+  }
+
+  // 获取登录日志
+  async getLoginLogs (
+    userId: string,
+    query: {
+      status?: string;
+      loginType?: string;
+      page: number;
+      pageSize: number;
+    },
+  ) {
+    const { status, loginType, page, pageSize } = query;
+
+    const queryBuilder = this.loginLogRepository
+      .createQueryBuilder('log')
+      .where('log.userId = :userId', { userId });
+
+    if (status) {
+      queryBuilder.andWhere('log.status = :status', { status });
+    }
+
+    if (loginType) {
+      queryBuilder.andWhere('log.loginType = :loginType', { loginType });
+    }
+
+    queryBuilder
+      .orderBy('log.createdAt', 'DESC')
+      .skip((page - 1) * pageSize)
+      .take(pageSize);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      pageSize,
+    };
+  }
+
+  // 获取刷新Token列表
+  async getRefreshTokens (userId: string, currentAccessToken?: string) {
+    const tokens = await this.refreshTokenRepository.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+
+    // 标记当前Token
+    let currentTokenHash: string | null = null;
+    if (currentAccessToken) {
+      try {
+        const decoded = this.jwtService.decode(currentAccessToken) as any;
+        if (decoded?.jti) {
+          // 这里需要根据jti找到对应的refresh token
+          // 简化处理：通过最后使用时间判断
+          const recentTokens = tokens.filter(
+            (t) =>
+              t.lastUsedAt &&
+              Date.now() - t.lastUsedAt.getTime() < 1000 * 60 * 5, // 5分钟内使用过的
+          );
+          if (recentTokens.length > 0) {
+            currentTokenHash = recentTokens[0].tokenHash;
+          }
+        }
+      } catch (error) {
+        // 忽略解析错误
+      }
+    }
+
+    return tokens.map((token) => ({
+      id: token.id,
+      ipAddress: token.ipAddress,
+      userAgent: token.userAgent,
+      createdAt: token.createdAt,
+      lastUsedAt: token.lastUsedAt,
+      expiresAt: token.expiresAt,
+      isCurrent: token.tokenHash === currentTokenHash,
+    }));
+  }
+
+  // 撤销指定的刷新Token
+  async revokeRefreshToken (userId: string, tokenId: string): Promise<void> {
+    const token = await this.refreshTokenRepository.findOne({
+      where: { id: tokenId, userId },
+    });
+
+    if (!token) {
+      throw new BadRequestException('Token不存在');
+    }
+
+    await this.refreshTokenRepository.remove(token);
+  }
+
+  // 撤销所有刷新Token（除当前）
+  async revokeAllRefreshTokens (
+    userId: string,
+    currentAccessToken?: string,
+  ): Promise<void> {
+    // 获取所有token
+    const tokens = await this.refreshTokenRepository.find({
+      where: { userId },
+    });
+
+    // 找出当前token（如果有）
+    let currentTokenHash: string | null = null;
+    if (currentAccessToken) {
+      try {
+        const decoded = this.jwtService.decode(currentAccessToken) as any;
+        if (decoded?.jti) {
+          const recentTokens = tokens.filter(
+            (t) =>
+              t.lastUsedAt &&
+              Date.now() - t.lastUsedAt.getTime() < 1000 * 60 * 5,
+          );
+          if (recentTokens.length > 0) {
+            currentTokenHash = recentTokens[0].tokenHash;
+          }
+        }
+      } catch (error) {
+        // 忽略解析错误
+      }
+    }
+
+    // 删除所有非当前token
+    const tokensToRemove = tokens.filter(
+      (t) => t.tokenHash !== currentTokenHash,
+    );
+    if (tokensToRemove.length > 0) {
+      await this.refreshTokenRepository.remove(tokensToRemove);
     }
   }
 }

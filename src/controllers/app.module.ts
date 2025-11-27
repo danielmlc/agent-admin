@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DeviceModule } from './modules/device/device.module';
+import { ConfigModule } from './modules/config/config.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
@@ -21,6 +22,8 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     AuthModule,
     // 设备管理模块
     DeviceModule,
+    // 配置管理模块
+    ConfigModule,
   ],
   controllers: [AppController],
   providers: [

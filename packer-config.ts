@@ -6,8 +6,9 @@ const isDevelopment = process.env.CS_SERVICEENV === "dev";
 module.exports = {
   global: {
     cwd: __dirname,
-    clear: ["dist"],
+    clear: [],
     copy: {
+      "src/web-content/assets": "assets",
     },
     node: {
       rootOutPath: "dist/",
@@ -78,6 +79,12 @@ module.exports = {
       title: "登录 - XXXXX管理系统",
       template: "src/web-content/pages/login/index.html",
       input: "src/web-content/pages/login/index.ts",
+    },
+    home: {
+      type: "browserVue3",
+      title: "但以理 - 后台管理",
+      template: "src/web-content/pages/home/index.html",
+      input: "src/web-content/pages/home/index.ts",
     },
   },
 };
