@@ -2,6 +2,7 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserStatus } from './entities/user.entity';
+import { Role } from './entities/role.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Argon2Utils } from '@app/common/utils/crypto.util';
@@ -13,6 +14,8 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) { }
 
   async create (createUserDto: CreateUserDto, creatorId?: string, creatorName?: string): Promise<User> {
@@ -54,11 +57,22 @@ export class UserService {
       user.passwordHash = await this.argon2Utils.hashPassword(password);
     }
 
+    // 分配默认角色
+    const defaultRole = await this.roleRepository.findOne({
+      where: { isDefault: true },
+    });
+    if (defaultRole) {
+      user.roles = [defaultRole];
+    }
+
     return this.userRepository.save(user);
   }
 
   async findById (id: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles', 'roles.permissions'],
+    });
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
@@ -68,16 +82,23 @@ export class UserService {
   async findByUsername (username: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { username },
+      relations: ['roles', 'roles.permissions'],
       select: ['id', 'username', 'phone', 'email', 'passwordHash', 'avatar', 'nickname', 'status', 'createdAt', 'modifiedAt', 'lastLoginAt'],
     });
   }
 
   async findByPhone (phone: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { phone } });
+    return this.userRepository.findOne({
+      where: { phone },
+      relations: ['roles', 'roles.permissions'],
+    });
   }
 
   async findByEmail (email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
+    return this.userRepository.findOne({
+      where: { email },
+      relations: ['roles', 'roles.permissions'],
+    });
   }
 
   async update (id: string, updateUserDto: UpdateUserDto, modifierId?: string, modifierName?: string): Promise<User> {

@@ -114,6 +114,7 @@ export class AuthService {
         email: user.email,
         avatar: user.avatar,
         nickname: user.nickname,
+        roles: user.roles?.map(r => r.name) || [],
       },
       ...tokens,
     };
@@ -230,6 +231,7 @@ export class AuthService {
         email: user.email,
         avatar: user.avatar,
         nickname: user.nickname,
+        roles: user.roles?.map(r => r.name) || [],
       },
       ...tokens,
     };
@@ -253,6 +255,7 @@ export class AuthService {
       {
         sub: user.id,
         username: user.username,
+        roles: user.roles?.map(r => r.name) || [],
         jti,
       },
       {
@@ -382,6 +385,7 @@ export class AuthService {
         email: user.email,
         avatar: user.avatar,
         nickname: user.nickname,
+        roles: user.roles?.map(r => r.name) || [],
       },
       ...tokens,
     };
@@ -406,6 +410,7 @@ export class AuthService {
       {
         sub: user.id,
         username: user.username,
+        roles: user.roles?.map(r => r.name) || [],
         jti,
       },
       {

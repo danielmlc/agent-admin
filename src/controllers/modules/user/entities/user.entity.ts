@@ -4,8 +4,11 @@ import {
   Column,
   Index,
   OneToMany,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { BaseFullEntity } from '../../../common/entities';
+import { Role } from './role.entity';
 import { OAuthBinding } from './oauth-binding.entity';
 import { RefreshToken } from './refresh-token.entity';
 import { LoginLog } from './login-log.entity';
@@ -60,4 +63,12 @@ export class User extends BaseFullEntity {
 
   @OneToMany(() => LoginLog, (log) => log.user)
   loginLogs: LoginLog[];
+
+  @ManyToMany(() => Role, (role) => role.users)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles: Role[];
 }
