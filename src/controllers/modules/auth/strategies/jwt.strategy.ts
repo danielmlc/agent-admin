@@ -39,7 +39,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Token 已失效');
     }
 
-    // 查询用户信息
+    // 查询用户信息（findById 会在 UserService 中被修改以包含 roles）
+    // 注意：UserService 的 findById 需要确保加载 roles
+    // 我们之前的修改是在 findByUsername/Phone/Email 中添加了 relations。
+    // 现在我们需要确保 findById 也加载 roles，以便 Guards 可以访问 user.roles
     const user = await this.userService.findById(sub);
     if (!user) {
       throw new UnauthorizedException('用户不存在');

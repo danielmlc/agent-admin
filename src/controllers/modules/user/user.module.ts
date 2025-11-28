@@ -8,7 +8,11 @@ import {
   RefreshToken,
   LoginLog,
   IpRule,
+  Role,
+  Permission,
 } from './entities';
+import { RoleService } from './role.service';
+import { RoleController } from './role.controller';
 
 @Module({
   imports: [
@@ -18,10 +22,12 @@ import {
       RefreshToken,
       LoginLog,
       IpRule,
+      Role,
+      Permission,
     ]),
   ],
-  controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService, TypeOrmModule],
+  controllers: [UserController, RoleController],
+  providers: [UserService, RoleService],
+  exports: [UserService, RoleService, TypeOrmModule],
 })
 export class UserModule {}

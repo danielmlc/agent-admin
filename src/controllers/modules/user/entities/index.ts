@@ -3,3 +3,5 @@ export * from './oauth-binding.entity';
 export * from './refresh-token.entity';
 export * from './login-log.entity';
 export * from './ip-rule.entity';
+export * from './role.entity';
+export * from './permission.entity';
