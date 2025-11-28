@@ -326,6 +326,45 @@ export const homeApi = {
    */
   getPublicConfigs () {
     return request.get('/configs/public')
+  },
+
+  /**
+   * 角色和权限管理 API
+   */
+
+  // 获取所有角色
+  getRoles () {
+    return request.get('/roles')
+  },
+
+  // 获取角色详情
+  getRoleDetail (id: string) {
+    return request.get(`/roles/${id}`)
+  },
+
+  // 创建角色
+  createRole (data: { name: string; description?: string; isDefault?: boolean; permissions?: string[] }) {
+    return request.post('/roles', data)
+  },
+
+  // 更新角色
+  updateRole (id: string, data: { name?: string; description?: string; isDefault?: boolean; permissions?: string[] }) {
+    return request.patch(`/roles/${id}`, data)
+  },
+
+  // 删除角色
+  deleteRole (id: string) {
+    return request.delete(`/roles/${id}`)
+  },
+
+  // 获取所有权限
+  getPermissions () {
+    return request.get('/roles/permissions/list')
+  },
+
+  // 创建权限
+  createPermission (data: { code: string; description?: string; resource?: string; action?: string }) {
+    return request.post('/roles/permissions', data)
   }
 }
 
