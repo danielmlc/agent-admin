@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import Home from "./Home.vue";
 import UserManagement from "./views/UserManagement.vue";
+import RoleManagement from "./views/RoleManagement.vue";
 
 const routes = [
   {
@@ -23,6 +24,14 @@ const routes = [
           title: "用户管理",
         },
         component: () => import("./views/UserManagement.vue"),
+      },
+      {
+        path: "role-management",
+        name: "role-management",
+        meta: {
+          title: "角色权限管理",
+        },
+        component: () => import("./views/RoleManagement.vue"),
       },
       {
         path: "security",

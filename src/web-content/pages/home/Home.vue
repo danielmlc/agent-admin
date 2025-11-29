@@ -28,6 +28,11 @@
           <template #title>用户管理</template>
         </el-menu-item>
 
+        <el-menu-item index="role-management">
+          <el-icon><Lock /></el-icon>
+          <template #title>角色权限管理</template>
+        </el-menu-item>
+
         <el-menu-item index="security">
           <el-icon><Lock /></el-icon>
           <template #title>安全管理</template>
