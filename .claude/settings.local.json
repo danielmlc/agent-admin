@@ -15,7 +15,8 @@
       "Bash(dir:*)",
       "Bash(npm run build:*)",
       "Bash(mkdir:*)",
-      "Bash(npx ts-node:*)"
+      "Bash(npx ts-node:*)",
+      "Bash(del \"e:\\project\\blog\\agent-admin\\src\\controllers\\modules\\auth\\strategies\\wechat.strategy.ts\")"
     ],
     "deny": [],
     "ask": []
